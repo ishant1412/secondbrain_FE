@@ -28,7 +28,7 @@ const sizestyle={
 }
 export const Button =(props:ButtonProps)=>{
   
-            return(<button className={sizestyle[props.size] +""+variantstyle[props.variant] }>
+            return(<button className={sizestyle[props.size] +""+variantstyle[props.variant] } onClick={props.onclick}>
                 <div className="flex items-center">
                 <span >
                     {props.starticon}

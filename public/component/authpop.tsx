@@ -12,6 +12,7 @@ export const Authpop = () => {
     const navigate = useNavigate();
   const [userinput, setuserinput] = useState("");
   const [passwordinput, setpassinput] = useState("");
+  const [emailinput,setemailinput]= useState("")
   const [issignup, setissignup] = useState(false);
 
   async function authcall() {
@@ -20,6 +21,7 @@ export const Authpop = () => {
         const response = await axios.post("http://localhost:3000/api/v1/signup", {
           username: userinput,
           password: passwordinput,
+          email:emailinput
         });
         console.log(response);
         if(response.status===200){
@@ -30,6 +32,7 @@ export const Authpop = () => {
         const response = await axios.post("http://localhost:3000/api/v1/login", {
           username: userinput,
           password: passwordinput,
+          email:emailinput
         });
         if(response.status===200){
            
@@ -75,6 +78,12 @@ export const Authpop = () => {
             value={passwordinput}
             onChange={(e) => setpassinput(e.target.value)}
           />
+          <input type="text"
+          placeholder="email"
+          className={inputbox}
+          value={emailinput}
+          onChange={(e)=>setemailinput(e.target.value)} />
+
           <button onClick={authcall} className={`${buttonstyle} mt-6`}>
             {issignup ? "Sign Up" : "Login"}
           </button>

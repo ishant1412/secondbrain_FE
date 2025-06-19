@@ -1,6 +1,8 @@
-import { ReactElement, useEffect } from "react"
+import { ReactElement, useEffect, useState } from "react"
 import React from "react";
+import { Card } from "./card";
 import { Button } from "./button";
+import { Form } from "./form";
 import { Brain, Share2, Plus, Book, Twitter, FileText, Link2, Tags } from "lucide-react"
 import axios from "axios"
 
@@ -11,7 +13,15 @@ interface layoutprops {
 
 type Section = "All notes" | "Tweets" | "Document" | "links" | "tags";
 
-
+interface CardProps {
+    infotype: "tweet" | "video" | "list";
+    title: string;
+    image: string;
+    Link:String;
+    despcription: string;
+    tags: string[];
+    
+  }
 
 const sectionstyle = "pt-7 pl-3 font-mono text-gray-700"
 const sectionboxstyle = "pt-2 rounded-md hover:bg-blue-100 transition-colors duration-200 cursor-pointer"
@@ -29,33 +39,53 @@ const icon: Record<Section, ReactElement> = {
     "tags": <Tags className={icoonstyle} />
 }
 export const Dashboard = (props: layoutprops) => {
+    const [showform , setshowform]=useState(false);
     const token = localStorage.getItem("token");
-    if(token){ 
+    const [content,setcontent] = useState<CardProps[]|any>();
+
+
+       function formclosehandler(){
+        setshowform(!showform)
+       }   
         async function getcontent(){ 
-            try{ 
-        const content = await axios.get("http://localhost:3000/api/v1/content",{
+            
+        const response = await axios.get("http://localhost:3000/api/v1/getcontent",{
              headers:{
                 "authorization":token
             }
             
         }) 
-      console.log(content.data)}
-        catch(e){
-  console.log("error in content fetchyingh")
+      
+        setcontent(response.data.usercontentdata);
+
         }
-     }
+     
          useEffect(()=>{
      getcontent();
-    },[])}
-     else{
-        console.log("token invalid")
-     }
-
+         },[])
+  
   
 
-    return (
+    return (<>
+{showform && (
+  <div className=" fixed inset-0 flex items-center transition-colors justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-300">
+    {/* Background Overlay */}
+    <div className="absolute inset-0 bg-opacity-50 backdrop-blur-sm"></div>
+
+    {/* Center the Form */}
+    <div className="flex justify-center items-center min-h-screen relative z-10">
+      <Form onClose={formclosehandler} />
+    </div>
+  </div>
+)}
+
+
+        
         <div className="flex flex-col md:flex-row min-h-screen">
-            {/* Sidebar */}
+            {}
+           { /* Sidebar */}
+
+         
             <div className="md:basis-[25%] w-full bg-white shadow-md">
                 <div className="flex items-center justify-center md:justify-start p-4">
                     {layout.logo}
@@ -79,7 +109,7 @@ export const Dashboard = (props: layoutprops) => {
                 </div>
             </div>
 
-            {/* Content Area */}
+           
             <div className="md:basis-[75%] w-full bg-gray-100">
                 <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-b bg-white shadow-sm">
                     <div className="text-xl font-mono font-semibold text-gray-700">{props.pagename}</div>
@@ -96,16 +126,24 @@ export const Dashboard = (props: layoutprops) => {
                             size="sm"
                             text="Add content"
                             starticon={<Plus className="h-4" />}
-                            onclick={() => { }}
+                            onclick={()=>{setshowform(true)
+                                console.log(showform);
+                            }}
                         />
                     </div>
                 </div>
 
                 {/* Content placeholder */}
-                <div className="p-6">
-                    {/* Here your cards will be rendered */}
+                <div className="p-6 flex">
+                   { content?.map((card)=>{return  <Card 
+        infotype={card.type}
+            title={card.title}
+    image={card.imglink}
+    Link={card.link}
+    despcription={card.description}
+    tags={card.tags}></Card>})}
                 </div>
             </div>
         </div>
-    )
+  </> )
 }

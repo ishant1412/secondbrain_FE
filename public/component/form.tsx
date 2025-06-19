@@ -1,37 +1,155 @@
 import { useState } from "react";
-  import {X} from "lucide-react";
+import { WandSparkles, X } from "lucide-react";
 import React from "react";
-const crossstyle="h-3 pt-1 "
-const tagstyle="bg-blue-200 m-1 rounded-md  place-content-center text-gray-500 text-[13px]"   
-export const Form =()=>{
-    const [show,setshow]= useState(true);
-    const [tags,settags]=useState<string[]>([]);
-    const [input,settaginput]= useState("");
-    
-    function taginput(e){
-          settaginput(e.target.value);
+import { Button } from "./button";
+import axios from "axios";
+
+const crossstyle = "h-3 pt-1 ";
+const tagstyle = "bg-blue-200 m-1 rounded-md place-content-center text-gray-500 text-[13px]";
+
+export const Form = ({ onClose }) => {
+  const [tags, setTags] = useState<string[]>([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [link, setLink] = useState("");
+  const [type, setType] = useState("");
+  const [input, setTagInput] = useState("");
+
+  const btnstyle = "border h-10 rounded border-black w-44 ml-1 flex bg-blue-400 text-white";
+
+  function addTag() {
+    if (input.trim() !== "") {
+      setTags([...tags, input.trim()]);
+      setTagInput("");
     }
-     
-     function Addtag(){
-      settags([...tags,input]);
-      settaginput("");
-      
-     }
-    return <>
-    <div className="h-dvh w-dvw grid place-content-center font-mono ">
-      <div className="h-fit pb-2 w-90 bg-white justify-center pl-2 rounded border-3 border-gray-300 " >
-        <div className="flex justify-center font-mono pt-3 font-bold">Add Content</div>
-        <div className="flex pr-2 pb-2" ><div className="pr-2">Title</div><input type="text" placeholder="enter title" className="bg-white rounded-md border-2 border-black font-mono text-[15px] w-dvw" /></div>
-        <div className="pt-2">Type: <select name="types" id=""  className="bg-white rounded border-2 border-gray w-[83%]">
-            <option value="tweet">tweet</option>
-            <option value="video">video</option>
-            <option value="list">list</option></select></div>
-        <div className="flex pd-2 pt-3"> <div> Image Link: </div> <div className="pl-2"><input type="text" placeholder="paste link here" className="bg-white rounded border-2  border-gray w-[128%] h-[100%]" /></div></div>
-        <div className="pt-3 flex"><div>Description:</div> <div><input type="text" placeholder="enter the description here"  className="bg-white rounded-md border-2 border-black font-mono text-[15px] w-[140%] h-[350%] "/></div> </div>  
-        <div className="pt-18"><input type="text" value={input} onChange={taginput} placeholder="add tags" className="bg-white rounded-md border-2 border-black-300 font-mono text-[15px] w-[85%]"  /> <button className="bg-blue-500 rounded w-9 text-white " onClick={Addtag}>Add</button></div>
-           <div className="flex flex-wrap">{tags.map((tag)=>{return <> <div className={tagstyle}>{tag} <button><X className={crossstyle}></X></button></div></>})}</div>
-          <div className="pt-2"><button className="w-[96%] bg-blue-400 text-white rounded">submit</button></div>
+  }
+
+  async function sendContent() {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "http://localhost:3000/api/v1/contentpost",
+        {
+          link:link,
+          type:type,
+          title:title,
+          description:description,
+          tags:tags,
+        },
+        {
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response);
+      onClose();
+    } catch (err) {
+      console.error("Error while submitting content:", err);
+    }
+  }
+
+  return (
+    <div className={"border-2 border-gray-300 p-2 bg-white rounded-2xl w-140"}>
+      <div className="flex justify-between items-center mb-4">
+        <div className="font-bold text-xl">Add Content</div>
+        <button onClick={onClose}>
+          <X className="h-5 w-5 text-gray-700 hover:scale-110 transition-transform" />
+        </button>
       </div>
+
+      <div className="mb-2">
+        <input
+          type="text"
+          placeholder="Enter title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full border p-2 rounded"
+        />
       </div>
-    </> 
-}
+
+      <div className="mb-2">
+        <select
+          className="w-full border p-2 rounded"
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+        >
+          <option value="">Select Type</option>
+          <option value="tweet">Tweet</option>
+          <option value="video">Video</option>
+          <option value="notes">List</option>
+          <option value="image">Image</option>
+          <option value="article">Article</option>
+          <option value="instapost">Insta Post</option>
+        </select>
+      </div>
+
+      <div className="mb-2 flex">
+        {(type === "video" || type === "instapost" || type === "tweet") && (
+          <>
+            <input
+              type="text"
+              placeholder="Paste link here"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              className="w-2/3 border p-2 rounded"
+            />
+            <div className={btnstyle}>
+              <WandSparkles className="w-4 h-4 mt-2 mr-1" />
+              <div>Generate description</div>
+            </div>
+          </>
+        )}
+        {(type !== "video" && type !== "instapost" && type !== "tweet") && (
+          <input
+            type="text"
+            placeholder="Paste link here"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            className="w-full border p-2 rounded"
+          />
+        )}
+      </div>
+
+      <div className="mb-2">
+        <textarea
+          className="border p-2 rounded w-full"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Description here..."
+        ></textarea>
+      </div>
+
+      <div className="mb-2 flex">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setTagInput(e.target.value)}
+          placeholder="Add tags"
+          className="w-full border p-2 rounded mr-2"
+        />
+        <button onClick={addTag} className="bg-blue-500 text-white px-3 py-2 rounded">
+          Add
+        </button>
+      </div>
+
+      <div className="flex flex-wrap mb-3">
+        {tags.map((tag, index) => (
+          <div key={index} className={tagstyle}>
+            {tag}{" "}
+            <button onClick={() => setTags(tags.filter((t) => t !== tag))}>
+              <X className={crossstyle} />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button
+        className="w-full bg-blue-400 text-white py-2 rounded hover:bg-blue-500"
+        onClick={sendContent}
+      >
+        Submit
+      </button>
+    </div>
+  );
+};
