@@ -10,7 +10,7 @@ function Errorpopup(){
     </>
 }
 
-function Formerror({etext:etext}){
+function Formerror(){
   return <>
-  <div className="text-red-500">{etext}</div></>
+  <div className="text-red-500">{}</div></>
 }

@@ -1,19 +1,48 @@
 import { useState } from "react";
-import { WandSparkles, X } from "lucide-react";
+import { WandSparkles, X , CircleSlash} from "lucide-react";
 import React from "react";
 import { Button } from "./button";
 import axios from "axios";
-
+import Alert from "./notpop";
 const crossstyle = "h-3 pt-1 ";
 const tagstyle = "bg-blue-200 m-1 rounded-md place-content-center text-gray-500 text-[13px]";
+const errorstyle = "text-[10px] text-red-400 flex"
 
-export const Form = ({ onClose }) => {
+type proptype = {
+  onClose: () => void
+}
+type AlertType = 200 | 300 | 400 ;
+
+interface AlertProps {
+  type: AlertType;
+ 
+  message: string;
+  isVisible: boolean;
+  onClose: () => void;
+ 
+  
+}
+export const Form = ({ onClose }: proptype) => {
+
+    const [alert,setalert]=useState<AlertProps>({
+      type:200 as AlertType,
+      message:"",
+      isVisible:false,
+      onClose:()=>{}
+    })
+    const [FErrors,setFErrors]=useState<any>()
   const [tags, setTags] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
   const [type, setType] = useState("");
   const [input, setTagInput] = useState("");
+  const [loading,setloading]= useState(false);
+
+
+
+
+
 
   const btnstyle = "border h-10 rounded border-black w-44 ml-1 flex bg-blue-400 text-white";
 
@@ -25,32 +54,82 @@ export const Form = ({ onClose }) => {
   }
 
   async function sendContent() {
+    setloading(true);
     try {
+      
       const token = localStorage.getItem("token");
+      if (!token) {
+
+        setalert(prev=>({...prev,
+          type:300,
+          message:"token not recieved",
+          isVisible:true
+        }))
+        return
+      }
+      console.log("Data being sent:", {
+        link, type, title, description, tags
+      });
+     
       const response = await axios.post(
         "http://localhost:3000/api/v1/contentpost",
         {
-          link:link,
-          type:type,
-          title:title,
-          description:description,
-          tags:tags,
-        },
-        {
-          headers: {
-            authorization: `Bearer ${token}`,
-          },
+          link: link,
+          type: type,
+          title: title,
+          description: description,
+          tags: tags,
+        }, {
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+
         }
+      }
+
+
       );
-      console.log(response);
+      if(response.status===200){
+         setalert(prev=>({...prev,
+          type:200,
+          message:response.data.message,
+          isVisible:true
+        }))
+      }
+      else if(response.status===300){
+         setalert(prev=>({...prev,
+          type:300,
+          message:response.data.message,
+          isVisible:true
+        }))
+      }
+      else if(response.status===400){
+          setalert(prev=>({...prev,
+          type:400,
+          message:response.data.message,
+          isVisible:true
+        }))
+        if(response.data.message?.fieldErrors){
+          setFErrors(response.data.message?.fieldErrors)
+        }
+      }
+     
       onClose();
     } catch (err) {
-      console.error("Error while submitting content:", err);
+       setalert(prev=>({...prev,
+          type:300,
+          message:"couldnt submit the content",
+          isVisible:true
+        }))
     }
   }
 
   return (
-    <div className={"border-2 border-gray-300 p-2 bg-white rounded-2xl w-140"}>
+    <div className={"border-2 border-gray-300 p-2 bg-white rounded-2xl w-140 isolate"}>
+       <Alert type={alert.type}
+  message={alert.message}
+  isVisible={alert.isVisible}
+  onClose={()=>{setalert(prev=>({...prev,isVisible:false}))}}></Alert>
       <div className="flex justify-between items-center mb-4">
         <div className="font-bold text-xl">Add Content</div>
         <button onClick={onClose}>
@@ -66,6 +145,8 @@ export const Form = ({ onClose }) => {
           onChange={(e) => setTitle(e.target.value)}
           className="w-full border p-2 rounded"
         />
+          {FErrors?.fieldErrors?.title && (<>
+            <div className={errorstyle}><CircleSlash className="size-2 mt-0.5"> </CircleSlash>{FErrors.fieldErrors.title[0]}</div></>)}
       </div>
 
       <div className="mb-2">
@@ -77,7 +158,7 @@ export const Form = ({ onClose }) => {
           <option value="">Select Type</option>
           <option value="tweet">Tweet</option>
           <option value="video">Video</option>
-          <option value="notes">List</option>
+          <option value="notes">Notes</option>
           <option value="image">Image</option>
           <option value="article">Article</option>
           <option value="instapost">Insta Post</option>
@@ -85,22 +166,10 @@ export const Form = ({ onClose }) => {
       </div>
 
       <div className="mb-2 flex">
-        {(type === "video" || type === "instapost" || type === "tweet") && (
+
+
+        {type !== "notes" && (
           <>
-            <input
-              type="text"
-              placeholder="Paste link here"
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-              className="w-2/3 border p-2 rounded"
-            />
-            <div className={btnstyle}>
-              <WandSparkles className="w-4 h-4 mt-2 mr-1" />
-              <div>Generate description</div>
-            </div>
-          </>
-        )}
-        {(type !== "video" && type !== "instapost" && type !== "tweet") && (
           <input
             type="text"
             placeholder="Paste link here"
@@ -108,6 +177,9 @@ export const Form = ({ onClose }) => {
             onChange={(e) => setLink(e.target.value)}
             className="w-full border p-2 rounded"
           />
+            {FErrors?.fieldErrors?.link && (<>
+            <div className={errorstyle}><CircleSlash className="size-2 mt-0.5"> </CircleSlash>{FErrors.fieldErrors.link[0]}</div></>)}
+          </>
         )}
       </div>
 
@@ -116,7 +188,7 @@ export const Form = ({ onClose }) => {
           className="border p-2 rounded w-full"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description here..."
+          placeholder={type === "notes" ? "text here.." : "description here.."}
         ></textarea>
       </div>
 

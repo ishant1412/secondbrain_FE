@@ -1,14 +1,10 @@
-import { useState } from 'react'
 
-import {Errorpopup}from "../public/component/error";
-//import {UseE} from "../public/component/practice"
-import {Main} from "../public/component/practice"
-import {Todo} from "../public/component/todo";
 import { BrowserRouter, Routes ,Route} from 'react-router-dom';
 import {Oops} from "../public/component/oops";
 import {Authpop} from"../public/component/authpop";
 import { Dashboard } from '../public/component/layout';
-
+import {Shareview} from "../public/component/shareview"
+import SecondBrainLanding from "../public/component/landingpage"
 function App() {
  
 
@@ -16,10 +12,11 @@ function App() {
     <>
       <BrowserRouter>
       <Routes>
-  <Route path="/" element={<Authpop />} />
+  <Route path="/" element={<SecondBrainLanding/>} />
+  <Route path='/signin' element={<Authpop/>}/>
   <Route path="*" element={<Oops />} />
   <Route path="/dashboard" element={<Dashboard/>} />
-  <Route path="/share/:userI" element={<div />} />
+  <Route path="/sharecontent" element={<Shareview></Shareview>} />
 </Routes>
 
       
